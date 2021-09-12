@@ -42,8 +42,9 @@ def lpop(key, from_end:bool=False) -> str:
             return pop_item
     
     else:
-        print(lrange(key))
         return redis.lpop(key).decode()
     
     
 calls:dict = {}
+
+active_calls = {}

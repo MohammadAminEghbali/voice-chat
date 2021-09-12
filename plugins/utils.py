@@ -1,8 +1,13 @@
-from pyrogram import Client
-from pyrogram.types import Message
-from pyrogram.errors.exceptions.bad_request_400 import ChatAdminRequired
-from pyrogram.raw.functions.phone import GetGroupCall, CreateGroupCall
+from random import randint
+
 import ffmpeg
+from pyrogram import Client, filters
+from pyrogram.errors.exceptions.bad_request_400 import ChatAdminRequired
+from pyrogram.raw.functions.phone import CreateGroupCall, GetGroupCall
+from pyrogram.types import Message
+
+
+from .db import redis
 
 async def create_vc(app:Client, msg:Message):
     chat_id = msg.chat.id
@@ -23,11 +28,9 @@ async def create_vc(app:Client, msg:Message):
 
     else:
         return True
+   
             
 def convertor(input_file, raw_file):
-    # if not path.exists(raw_file):
-    #     open(raw_file, 'w').close()
-    
     try:
         ffmpeg.input(input_file).output(
             raw_file,
@@ -36,22 +39,31 @@ def convertor(input_file, raw_file):
             ac=2, ar='48k'
         ).overwrite_output().run(quiet=True)
         
-    except:
+    except Exception as e:
+        print(e)
         return False
     
     else:
         return True
     
-# def get_duration(input_file):
-#     try:
-#         duration = int(float(ffmpeg.probe(input_file)['streams'][0]['duration']))
-#     except:
-#         return None
     
-#     else:
-#         return duration
-    
+def create_random_raw_name(input_name):
+    return f'{input_name}{randint(randint(10, 100), randint(110, 200))}.raw'
 
-# def filter_user(_, __, msg):
-#     if msg.chat.type == 'channel':
-#         return True
+
+def set_call_file(call, file):
+    call.input_filename = file
+    return None
+
+
+async def audio(_, __, msg:Message):
+    text = 'لطفا روی یک فایل موسیقی ریپلای کنید'
+    if await filters.reply(Client, msg):
+        if msg.reply_to_message.audio:
+            return True
+        else:
+            await msg.reply(text)
+            return False
+    else:
+        await msg.reply(text)
+        return False
