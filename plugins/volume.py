@@ -17,10 +17,17 @@ async def pauser(app:Client, msg:Message):
             return await msg.reply('میزان صدا اشتباه وارد شده است')
         
         if group_call and volume != None:
-            return await group_call.set_my_volume(volume), await msg.reply(f"میزان صدا به {volume:.0f} تغییر کرد")
+            return (
+                await group_call.set_my_volume(volume),
+                await msg.reply(f"میزان صدا به {volume:.0f} تغییر کرد"),
+                await msg.delete()
+            )
         
         else:
-            return await msg.reply("موزیکی از قبل پخش نمیشد")
+            return (
+                await msg.reply("موزیکی از قبل پخش نمیشد"),
+                await msg.delete()
+            )
     
     else:
         return await msg.reply("""

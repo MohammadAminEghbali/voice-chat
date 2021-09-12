@@ -114,9 +114,10 @@ async def player(app:Client, msg:Message):
                 
         else:
             redis.hdel(chat_str, 'playing')
-            return await msg_result.edit('خطا در آماده سازی موزیک')
+            return await msg_result.edit('خطا در آماده سازی موزیک'), await msg.delete()
     
     else:
         await msg.reply("موزیک به صف موزیک ها اضافه شد")
+        await msg.delete()
         return lpush(group_name, msg.reply_to_message.message_id)
             
