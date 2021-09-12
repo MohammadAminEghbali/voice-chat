@@ -54,10 +54,10 @@ async def player(app:Client, msg:Message):
 
         if not path.exists(chat_path):
             mkdir(chat_path)
-            
+    
         input_file = await msg.reply_to_message.download(chat_path)
         raw_file = create_random_raw_name(input_file)
-        convert = convertor(input_file, raw_file)
+        convert = await convertor(input_file, raw_file)
         remove(input_file)
         
         if convert:
@@ -65,11 +65,13 @@ async def player(app:Client, msg:Message):
             await msg.delete()
             
             redis.hset(chat_str, 'lastfile', raw_file)
-            set_call_file(group_call, raw_file) 
+            await set_call_file(group_call, raw_file) 
+            
             active_calls[chat_id] = group_call
             
             await group_call.start(chat_id)
             
+                                    
             @group_call.on_playout_ended
             async def queue(_, __):
                 lastfile = redis.hget(chat_str, 'lastfile')

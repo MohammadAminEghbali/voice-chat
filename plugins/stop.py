@@ -1,9 +1,12 @@
+import asyncio
+from os import remove
+
 from pyrogram import Client, filters
 from pyrogram.types import Message
-
 from pytgcalls import GroupCallFactory
 
 from .db import *
+
 
 @Client.on_message(~filters.edited & filters.command('stop', '!'))
 async def stoper(app:Client, msg:Message):
@@ -11,9 +14,14 @@ async def stoper(app:Client, msg:Message):
     group_call = active_calls.get(chat_id)
     
     if group_call:
-        await group_call.stop()
+        await asyncio.sleep(3)
         del active_calls[chat_id]
+        await group_call.stop()
         group_name = f'chat|{msg.chat.id}'
+        lastfile = redis.hget(str(chat_id), 'lastfile')
+        if lastfile:
+            remove(lastfile.decode())
+            
         redis.delete(str(chat_id), group_name)
         return await msg.reply('چت صوتی پایان یافت')
     

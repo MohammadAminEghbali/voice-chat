@@ -1,4 +1,6 @@
+import asyncio
 from random import randint
+from os import path
 
 import ffmpeg
 from pyrogram import Client, filters
@@ -6,8 +8,8 @@ from pyrogram.errors.exceptions.bad_request_400 import ChatAdminRequired
 from pyrogram.raw.functions.phone import CreateGroupCall, GetGroupCall
 from pyrogram.types import Message
 
-
 from .db import redis
+
 
 async def create_vc(app:Client, msg:Message):
     chat_id = msg.chat.id
@@ -30,28 +32,29 @@ async def create_vc(app:Client, msg:Message):
         return True
    
             
-def convertor(input_file, raw_file):
-    try:
-        ffmpeg.input(input_file).output(
-            raw_file,
-            format='s16le',
-            acodec='pcm_s16le',
-            ac=2, ar='48k'
-        ).overwrite_output().run(quiet=True)
-        
-    except Exception as e:
-        print(e)
-        return False
+async def convertor(input_file, raw_file):
+    command = f'ffmpeg -i "{input_file}" -f s16le -ac 2 -ar 48000 -acodec pcm_s16le "{raw_file}" -hide_banner'
+    
+    commandline = await asyncio.create_subprocess_shell(
+        command,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE
+    )
+    
+    stdout, stderr = await commandline.communicate()
+    
+    if path.exists(raw_file):
+        return True
     
     else:
-        return True
+        return False
     
     
 def create_random_raw_name(input_name):
     return f'{input_name}{randint(randint(10, 100), randint(110, 200))}.raw'
 
 
-def set_call_file(call, file):
+async def set_call_file(call, file):
     call.input_filename = file
     return None
 
