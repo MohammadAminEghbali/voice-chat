@@ -20,7 +20,7 @@ audio_filter = filters.create(audio)
 async def player(app:Client, msg:Message):
     chat_id = msg.chat.id
     chat_str = str(chat_id)
-    group_name = f'chat|{msg.chat.id}'
+    group_name = f'chat|{chat_id}'
     
     if redis.hget(chat_str, 'playing') == None:
         redis.hset(chat_str, 'playing', 1)
@@ -35,15 +35,15 @@ async def player(app:Client, msg:Message):
         msg_result:Message = await msg.reply("درحال برسی اطلاعات چت")
 
         peer = await app.resolve_peer(chat_id)
-        chat_info = (await app.send(
+        call = (await app.send(
             GetFullChannel(
                 channel=InputChannel(
                     channel_id=peer.channel_id,
                     access_hash=peer.access_hash
                 )
             )
-        )).full_chat
-        call = chat_info.call   
+        )).full_chat.chat_info.call 
+
         if call == None:
             await msg_result.edit("چت صوتی یافت نشد درحال ساخت چت صوتی")
             crearte = await create_vc(app, msg)
@@ -79,7 +79,7 @@ async def player(app:Client, msg:Message):
                     remove(lastfile.decode())
                     redis.hdel(chat_str, 'lastfile')
                         
-                if lrange(group_name) != []:
+                if lrange(group_name) != [] and redis.hget(chat_id, 'skiping') == None:
                     msg_id = int(lpop(group_name, True))
                     msg = await app.send_message(
                         chat_id,
@@ -97,9 +97,9 @@ async def player(app:Client, msg:Message):
                     
                     else:
                         raw_file = create_random_raw_name(input_file)
-                        convertor(input_file, raw_file)
+                        await convertor(input_file, raw_file)
                         
-                        set_call_file(group_call, raw_file)
+                        await set_call_file(group_call, raw_file)
                         remove(input_file)
                         
                         redis.hset(chat_str, 'lastfile', raw_file)
@@ -110,6 +110,7 @@ async def player(app:Client, msg:Message):
                     redis.delete(chat_str)
                     await app.send_message(chat_id, 'تمامی موزیک ها پایان یافتند و موزیکی برای پخش موجود نیست')
                     del calls[chat_id]
+                    del active_calls[chat_id]
                     return await group_call.stop()
                 
         else:
