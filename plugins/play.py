@@ -42,7 +42,7 @@ async def player(app:Client, msg:Message):
                     access_hash=peer.access_hash
                 )
             )
-        )).full_chat.chat_info.call 
+        )).full_chat.call 
 
         if call == None:
             await msg_result.edit("چت صوتی یافت نشد درحال ساخت چت صوتی")
