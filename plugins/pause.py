@@ -9,6 +9,7 @@ async def pauser(app:Client, msg:Message):
     group_call = active_calls.get(chat_id)
 
     if group_call:
+        group_call.enable_action = False
         return (
             group_call.pause_playout(),
             await msg.reply('موزیک متوقف شد'),

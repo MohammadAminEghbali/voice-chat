@@ -28,7 +28,6 @@ async def player(app:Client, msg:Message):
 
         if calls.get(chat_id):
             group_call = calls.get(chat_id)
-
         else:
             calls[chat_id] = (group_call := GroupCallFactory(app).get_file_group_call())
 
@@ -43,7 +42,8 @@ async def player(app:Client, msg:Message):
                 )
             )
         )).full_chat.call 
-
+        
+        
         if call == None:
             await msg_result.edit("چت صوتی یافت نشد درحال ساخت چت صوتی")
             crearte = await create_vc(app, msg)
@@ -59,7 +59,7 @@ async def player(app:Client, msg:Message):
         raw_file = create_random_raw_name(input_file)
         convert = await convertor(input_file, raw_file)
         remove(input_file)
-        
+
         if convert:
             await msg_result.edit("عملیات باموفقیت انجام شد")
             await msg.delete()
