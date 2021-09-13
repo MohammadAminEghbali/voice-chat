@@ -8,7 +8,12 @@ from pytgcalls import GroupCallFactory
 from .db import *
 
 
-@Client.on_message(~filters.edited & filters.command('stop', '!'))
+@Client.on_message(
+    ~filters.edited &
+    ~filters.linked_channel &
+    ~filters.private &
+    filters.command('stop', '!')
+)
 async def stoper(app:Client, msg:Message):
     chat_id = msg.chat.id
     group_call = active_calls.get(chat_id)

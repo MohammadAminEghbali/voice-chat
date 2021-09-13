@@ -3,7 +3,12 @@ from pyrogram.types import Message
 
 from .db import active_calls
 
-@Client.on_message(~filters.edited & ~filters.linked_channel & filters.command('resume','!'))
+@Client.on_message(
+    ~filters.edited &
+    ~filters.linked_channel &
+    ~filters.private &
+    filters.command('resume','!')
+)
 async def pauser(app:Client, msg:Message):
     chat_id = msg.chat.id
     group_call = active_calls.get(chat_id)

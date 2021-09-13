@@ -3,14 +3,17 @@ from pyrogram.types import Message
 
 from .db import active_calls
 
-@Client.on_message(~filters.edited & ~filters.linked_channel & filters.command('volume','!'))
+@Client.on_message(
+    ~filters.edited &
+    ~filters.linked_channel &
+    ~filters.private &
+    filters.command('volume','!')
+)
 async def pauser(app:Client, msg:Message):
     if len(msg.command) == 2:
         chat_id = msg.chat.id
         group_call = active_calls.get(chat_id)
-        volume = 1
         try:
-            # volume = int(msg.command[1]) & float(msg.command[1])
             volume = float(msg.command[1])
         
         except ValueError:

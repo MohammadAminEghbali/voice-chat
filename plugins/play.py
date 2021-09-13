@@ -16,7 +16,13 @@ from .utils import *
 
 audio_filter = filters.create(audio)
 
-@Client.on_message(~filters.edited & ~filters.linked_channel & filters.command('play', '!') & audio_filter)
+@Client.on_message(
+    ~filters.edited &
+    ~filters.linked_channel &
+    ~filters.private &
+    filters.command('play', '!') &
+    audio_filter
+)
 async def player(app:Client, msg:Message):
     chat_id = msg.chat.id
     chat_str = str(chat_id)
@@ -26,10 +32,15 @@ async def player(app:Client, msg:Message):
         redis.hset(chat_str, 'playing', 1)
         chat_path = f'./groups/{chat_id}/'
 
-        if calls.get(chat_id):
-            group_call = calls.get(chat_id)
-        else:
-            calls[chat_id] = (group_call := GroupCallFactory(app).get_file_group_call())
+        group_call = (
+            calls.get(chat_id) if calls.get(chat_id)
+            else GroupCallFactory(app).get_file_group_call()
+        )
+        # if calls.get(chat_id):
+        #     group_call = calls.get(chat_id)
+            
+        # else:
+        #     calls[chat_id] = (group_call := GroupCallFactory(app).get_file_group_call())
 
         msg_result:Message = await msg.reply("درحال برسی اطلاعات چت")
 
@@ -74,44 +85,44 @@ async def player(app:Client, msg:Message):
                                     
             @group_call.on_playout_ended
             async def queue(_, __):
-                lastfile = redis.hget(chat_str, 'lastfile')
-                if lastfile:
-                    remove(lastfile.decode())
-                    redis.hdel(chat_str, 'lastfile')
+                if redis.hget(chat_id, 'skiping') == None:
+                    lastfile = redis.hget(chat_str, 'lastfile')
+                    if lastfile:
+                        remove(lastfile.decode())
+                        redis.hdel(chat_str, 'lastfile')
+                            
+                    if lrange(group_name) != []:
+                        msg_id = int(lpop(group_name, True))
+                        msg = await app.send_message(
+                            chat_id,
+                            'درحال آماده سازی موزیک جدید',
+                            reply_to_message_id=msg_id
+                        )
                         
-                if lrange(group_name) != [] and redis.hget(chat_id, 'skiping') == None:
-                    msg_id = int(lpop(group_name, True))
-                    msg = await app.send_message(
-                        chat_id,
-                        'درحال آماده سازی موزیک جدید',
-                        reply_to_message_id=msg_id
-                    )
-                    
-                    try:
-                        input_file = await (
-                            await app.get_messages(chat_id, msg_id)
-                            ).download(chat_path)
-                    
-                    except ValueError:
-                        return await msg.edit('موزیک پیدا نشد')
-                    
-                    else:
-                        raw_file = create_random_raw_name(input_file)
-                        await convertor(input_file, raw_file)
+                        try:
+                            input_file = await (
+                                await app.get_messages(chat_id, msg_id)
+                                ).download(chat_path)
                         
-                        await set_call_file(group_call, raw_file)
-                        remove(input_file)
+                        except ValueError:
+                            return await msg.edit('موزیک پیدا نشد')
                         
-                        redis.hset(chat_str, 'lastfile', raw_file)
+                        else:
+                            raw_file = create_random_raw_name(input_file)
+                            await convertor(input_file, raw_file)
+                            
+                            await set_call_file(group_call, raw_file)
+                            remove(input_file)
+                            
+                            redis.hset(chat_str, 'lastfile', raw_file)
 
-                        return await msg.edit('موزیک طبق پلی لیست به این موزیک تغییر کرد')
-                    
-                else:
-                    redis.delete(chat_str)
-                    await app.send_message(chat_id, 'تمامی موزیک ها پایان یافتند و موزیکی برای پخش موجود نیست')
-                    del calls[chat_id]
-                    del active_calls[chat_id]
-                    return await group_call.stop()
+                            return await msg.edit('موزیک طبق پلی لیست به این موزیک تغییر کرد')
+                        
+                    else:
+                        redis.delete(chat_str)
+                        await app.send_message(chat_id, 'تمامی موزیک ها پایان یافتند و موزیکی برای پخش موجود نیست')
+                        del calls[chat_id], active_calls[chat_id]
+                        return await group_call.stop()
                 
         else:
             redis.hdel(chat_str, 'playing')

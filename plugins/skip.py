@@ -8,7 +8,12 @@ from .db import *
 from .utils import *
 
 
-@Client.on_message(~filters.edited & ~filters.linked_channel & filters.command('skip', '!'))
+@Client.on_message(
+    ~filters.edited &
+    ~filters.linked_channel &
+    ~filters.private &
+    filters.command('skip', '!')
+)
 async def skiper(app:Client, msg:Message):
     chat_id = msg.chat.id
     group_call = active_calls.get(chat_id)

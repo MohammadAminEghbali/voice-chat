@@ -29,6 +29,7 @@ help_text = """
 @Client.on_message(
     ~filters.edited &
     ~filters.linked_channel &
+    ~filters.private &
     filters.command("help", '!')
 )
 async def helper(app:Client, msg:Message):
