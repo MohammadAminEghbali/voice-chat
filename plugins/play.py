@@ -32,15 +32,15 @@ async def player(app:Client, msg:Message):
         redis.hset(chat_str, 'playing', 1)
         chat_path = f'./groups/{chat_id}/'
 
-        group_call = (
-            calls.get(chat_id) if calls.get(chat_id)
-            else GroupCallFactory(app).get_file_group_call()
-        )
-        # if calls.get(chat_id):
-        #     group_call = calls.get(chat_id)
+        # group_call = (
+        #     calls.get(chat_id) if calls.get(chat_id)
+        #     else GroupCallFactory(app).get_file_group_call()
+        # )
+        if calls.get(chat_id):
+            group_call = calls.get(chat_id)
             
-        # else:
-        #     calls[chat_id] = (group_call := GroupCallFactory(app).get_file_group_call())
+        else:
+            calls[chat_id] = (group_call := GroupCallFactory(app).get_file_group_call())
 
         msg_result:Message = await msg.reply("درحال برسی اطلاعات چت")
 
