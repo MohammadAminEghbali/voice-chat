@@ -1,6 +1,7 @@
 # Voice Chat Music Player
 ## Usage:
 ### First step is installing requirement
+#### install ffmpeg on your device and run:
 ```bash
 pip install -r requirement.text
 ```
