@@ -41,7 +41,7 @@ async def convertor(input_file, raw_file):
         stderr=asyncio.subprocess.PIPE
     )
     
-    stdout, stderr = await commandline.communicate()
+    _, *__ = await commandline.communicate()
     
     if path.exists(raw_file):
         return True
